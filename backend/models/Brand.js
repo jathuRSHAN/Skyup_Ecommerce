@@ -3,9 +3,9 @@ const Schema = mongoose.Schema;
 
 const brandSchema = new Schema({
     name: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String},
     logoUrl: { type: String, required: true },
-    website: { type: String, required: true },
+    website: { type: String},
 },
 {
     timestamps: true
