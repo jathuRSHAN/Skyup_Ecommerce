@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const SubCategory = require('../models/SubCategory');
+const Category = require('../models/Category');
 const {authenticateToken, authorizeRole} = require('../middlewares/authMiddleware');
 
 router.get('/', authenticateToken, async (req, res) => {
@@ -26,19 +27,23 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 router.post('/', authenticateToken, authorizeRole("Admin"), async (req, res) => {
     try {
-        const { name, description, categoryId } = req.body;
-        if (!name || !categoryId) {
+        const { name, description, categoryName } = req.body;
+        if (!name || !categoryName) {
             return res.status(400).send({ error: 'Missing required fields' });
+        }
+        const category = await Category.findOne({ name: categoryName });
+        if (!category) {
+            return res.status(404).send({ error: 'Category not found' });
         }
 
         const subCategory = new SubCategory({
             name,
             description,
-            categoryId
+            categoryId: category._id
         });
 
         await subCategory.save();
-        res.status(201).send({ message: 'SubCategory is added successfully' }, subCategory);
+        res.status(201).send( subCategory);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -51,16 +56,23 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
             return res.status(404).send({ error: 'SubCategory not found' });
         }
 
-        const { name, description, categoryId } = req.body;
-        if (!name || !categoryId) {
+        const { name, description, categoryName } = req.body;
+        if (!name || !categoryName) {
             return res.status(400).send({ error: 'Missing required fields' });
+        }
+
+        const category = await Category.findOne({ name: categoryName });
+        if (!category) {
+            return res.status(404).send({ error: 'Category not found' });
         }
 
         subCategory.name = name;
         if (description) {
             subCategory.description = description;
         }
-        subCategory.categoryId = categoryId;
+        subCategory.categoryId = category._id;
+        await subCategory.save();
+        res.status(200).send(subCategory);
 
     } catch (error) {
         res.status(500).send({ error: error.message });

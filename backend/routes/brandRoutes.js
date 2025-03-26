@@ -8,7 +8,7 @@ const {authenticateToken, authorizeRole} = require('../middlewares/authMiddlewar
 router.get('/', authenticateToken, async (req,res)=>{
     try {
         const brands = await Brand.find();
-        res.status(200).send({message: 'brands are found'}, brands);
+        res.status(200).send(brands);
     } catch (error) {
         res.status(500).send({error: error.message});
     }
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, authorizeRole("Admin"), async (req,res)=>{
         });
 
         await brand.save();
-        res.status(201).send({message:'brand is added'},brand);
+        res.status(201).send(brand);
     } catch (error) {
         res.status(500).send({error: error.message});
     }
@@ -73,7 +73,7 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
         }
 
         await brand.save();
-        res.status(200).send({ message: 'Brand updated successfully' }, brand);
+        res.status(200).send(brand);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }

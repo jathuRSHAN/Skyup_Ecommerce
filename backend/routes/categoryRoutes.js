@@ -38,7 +38,7 @@ router.post('/', authenticateToken, authorizeRole("Admin"), async (req, res) => 
         });
 
         await category.save();
-        res.status(201).send({message: 'category is added sucsesfully'},category);
+        res.status(201).send(category);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -62,7 +62,7 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
         }
 
         await category.save();
-        res.status(200).send({message: 'category is updated sucsesfully'},category);
+        res.status(200).send(category);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }

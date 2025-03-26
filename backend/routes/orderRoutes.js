@@ -68,7 +68,7 @@ router.post('/', authenticateToken, async (req, res) => {
             await order.save();
             // customer.loyaltyPoints -= 100; // Deduct 100 loyalty points
             // await customer.save();
-            res.status(201).send({message:'Order is created'},order);
+            res.status(201).send(order);
         }
     } catch (error) {
         res.status(500).send({ error: error.message });

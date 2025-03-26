@@ -4,6 +4,12 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/userRoutes");
+const brandRoutes = require("./routes/brandRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const subCategoryRoutes = require("./routes/subCategoryRoutes");
+const itemRoutes = require("./routes/itemRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 dotenv.config(); // Load environment variables
 
@@ -31,6 +37,12 @@ const connectDB = async () => {
 // Routes
 app.use("/api", authRoutes);
 app.use("/users", userRoutes);
+app.use("/brands", brandRoutes);
+app.use("/carts", cartRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/sub-categories", subCategoryRoutes);
+app.use("/items", itemRoutes);
+app.use("/orders", orderRoutes);
 
 // Error-handling middleware
 app.use((err, req, res, next) => {

@@ -58,7 +58,7 @@ router.post('/', authenticateToken, authorizeRole("Admin"), async (req, res) => 
         });
         
         await item.save();
-        res.status(201).send({ message: 'Item added successfully' },item);
+        res.status(201).send(item);
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
@@ -96,7 +96,7 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
             return res.status(404).send({ error: 'Item not found' });
         }
 
-        res.status(200).send(item, { message: 'Item updated successfully' });
+        res.status(200).send(item);
     } catch (error) {
         res.status(400).send({ error: error.message });
     }

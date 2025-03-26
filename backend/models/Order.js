@@ -20,7 +20,7 @@ const orderSchema = new Schema({
     {
       itemId: {type: String, required: true},
       quantity: {type: Number, required: true},
-      priceAtOrder: {type: Number,required: true},
+      // priceAtOrder: {type: Number,required: true},
     },
   ],
   payment: {
@@ -43,7 +43,7 @@ const orderSchema = new Schema({
 });
 
 // Pre-save hook to set timestamps to IST
-userSchema.pre('save', function (next) {
+orderSchema.pre('save', function (next) {
     const now = new Date();
     const offset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
     this.createdAt = new Date(now.getTime() + offset);
