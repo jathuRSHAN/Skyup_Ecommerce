@@ -9,10 +9,10 @@ const orderSchema = new Schema({
     ref: 'Customer', // Refers to the Customer model
     required: true,
   },
-  orderDate: { type: Date,required: true},
+  // orderDate: { type: Date,required: true},
   totalAmount: { type: Number, required: true},
   status: { type: String,
-    enum: ["New", "Processing",  "Done"],
+    enum: ["New", "Processing",  "Done", "Cancelled"],
     required: true,
   },
   shippingCost: { type: Number, required: true, default: 0 },
@@ -23,19 +23,13 @@ const orderSchema = new Schema({
       // priceAtOrder: {type: Number,required: true},
     },
   ],
-  payment: {
-    paymentDate: {type: Date,required: true},
-    amount: {type: Number,required: true},
-    paymentMethod: {type: String,required: true, enum: ["Credit Card", "Debit Card", "Cash"]},
-  },
+  paymentId: {type: mongoose.Schema.Types.ObjectId, ref: 'Payment', required: true},
   shippingAddress: {
-    type: {
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
       postalCode: { type: String, required: true },
-    },
-    required: true,
+    
   },
 },
 {
