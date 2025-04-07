@@ -5,6 +5,7 @@ const Item = require('../models/Item');
 const Brand = require('../models/Brand');
 const SubCategory = require('../models/SubCategory');
 const {authenticateToken, authorizeRole} = require('../middlewares/authMiddleware');
+const upload = require('../utils/multerConfig.js');
 
 // Get all items
 router.get('/', authenticateToken, async (req, res) => {
@@ -67,8 +68,8 @@ router.post('/', authenticateToken, authorizeRole("Admin"), async (req, res) => 
 // Update item by ID
 router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) => {
     try {
-        const { name, description, price, subCategoryName, stock, brandName, image } = req.body;
-        if (!name || !description || !price || !subCategoryName || !stock || !brandName || !image) {
+        const { name, description, price, subCategoryName, stock, brandName} = req.body;
+        if (!name || !description || !price || !subCategoryName || !stock || !brandName ) {
             return res.status(400).send({ error: 'Missing required fields' });
         }
 
@@ -82,6 +83,8 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
             return res.status(404).send({ error: 'SubCategory not found' });
         }
 
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
         const item = await Item.findByIdAndUpdate(req.params.id, {
             name,
             description,
@@ -89,7 +92,7 @@ router.put('/:id', authenticateToken, authorizeRole("Admin"), async (req, res) =
             subCategoryId: subCategory._id,
             stock,
             brandId: brand._id,
-            image,
+            image: imageUrl,
         }, { new: true });
 
         if (!item) {
