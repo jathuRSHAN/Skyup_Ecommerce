@@ -15,7 +15,7 @@ const orderSchema = new Schema({
     enum: ["New", "Processing",  "Done", "Cancelled"],
     required: true,
   },
-  shippingCost: { type: Number, required: true, default: 0 },
+  //shippingCost: { type: Number, required: true, default: 0 },
   order_items: [
     {
       itemId: {type: String, required: true},
@@ -24,13 +24,13 @@ const orderSchema = new Schema({
     },
   ],
   paymentId: {type: mongoose.Schema.Types.ObjectId, ref: 'Payment', required: true},
-  shippingAddress: {
+  /*shippingAddress: {
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
       postalCode: { type: String, required: true },
     
-  },
+  },*/
 },
 {
   timestamps: true,

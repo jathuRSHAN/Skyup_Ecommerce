@@ -5,8 +5,8 @@ const PaymentSchema = new Schema({
     customerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
     amount: { type: Number, required: true },
     paymentMethod: { type: String, enum: ['Credit Card', 'Debit Card', 'Net Banking'], required: true },
-    transactionId: { type: String, required: true },
-    status: { type: String, enum: ['Pending', 'Completed', 'Failed','Canceled'], default: 'Pending' },
+    transactionId: { type: String },
+    status: { type: String, enum: ['Pending', 'Completed', 'Failed','Canceled','Processing'], default: 'Pending' },
 }, {
     timestamps: true
 });

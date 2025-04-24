@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const crypto = require('crypto'); // Add this line at the top with other requires
 const Order = require('../models/Order');
 const User = require('../models/user');
 const Customer = require('../models/Customer');
@@ -44,51 +44,105 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Create a new order
+// Create a new order and return PayHere redirect URL
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const customer = await Customer.findOne({ userId: req.user.id }).exec(); // Find the customer by userId
-        if (!customer) {
-            return res.status(404).send({ error: 'Customer not found' });
-        } else {
-            const orderItems = req.body.order_items;
-            let totalAmount = 0;
-            for (const item of orderItems) {
-                const itemDetails = await Item.findById
-                (item.itemId).exec(); // Get the item details
-                totalAmount += item.quantity * itemDetails.price; // Calculate the total amount
-            }
+      // Validate input
+      if (!req.body.order_items || !Array.isArray(req.body.order_items)) {
+        return res.status(400).send({ error: 'Invalid order items' });
+      }
+  
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) return res.status(404).send({ error: 'Customer not found' });
+  
+      // Calculate total
+      const items = await Promise.all(
+        req.body.order_items.map(async item => {
+          const product = await Item.findById(item.itemId);
+          return {
+            ...item,
+            unitPrice: product.price,
+            name: product.name
+          };
+        })
+      );
+  
+      const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  
+      // Create payment record
+      const payment = new Payment({
+        customerId: customer._id,
+        amount: totalAmount,
+        currency: 'LKR',
+        paymentMethod: 'Credit Card',
+        status: 'Pending'
+      });
+      
+  
+      // Create order
+      const order = new Order({
+        customerId: req.user.id,
+        items,
+        totalAmount,
+        status: 'New',
+        paymentId: payment._id,
+        shippingAddress: req.body.shippingAddress
+      });
+      
+  
+      // Generate PayHere URL
+      const payhereParams = new URLSearchParams({
+        merchant_id: "1211144", // Sandbox ID
+        return_url: `https://3190-175-157-186-5.ngrok-free.app/payments/success`,
+        cancel_url: `https://3190-175-157-186-5.ngrok-free.app/payments/cancel`,
+        notify_url: `https://3190-175-157-186-5.ngrok-free.app/payments/notify`,
+        order_id: payment._id.toString(),
+        items: order.order_items.map(i => i.name).join(', '),
+        amount: totalAmount.toFixed(2),
+        currency: "LKR",
+        first_name: req.body.first_name || customer.name.split(' ')[0],
+        last_name: req.body.last_name || customer.name.split(' ')[1] || '',
+        email: req.body.email || customer.email,
+        phone: req.body.phone || customer.phone,
+        address: req.body.shippingAddress,
+        city: req.body.city || 'Colombo',
+        country: "Sri Lanka",
+        delivery_address: req.body.shippingAddress,
+        custom_1: `Customer: ${customer._id}`,
+        hash: generatePayHereHash(payment._id.toString(), totalAmount.toFixed(2), "LKR")
+      });
 
-            const payment = new Payment({
-                customerId: customer._id,
-                amount: totalAmount,
-                paymentMethod: req.body.paymentMethod,
-                transactionId: req.body.transactionId,
-            });
+      //decrese stock
+      await Promise.all(
+        items.map(async item => {
+          const product = await Item.findById(item.itemId);
+          if (product.stock < item.quantity) {
+            return res.status(400).send({ error: `Not enough stock for ${product.name}` });
+          }
+          product.stock -= item.quantity;
+          await product.save();
+        })
+      );
 
-            await payment.save(); // Save the payment details
-
-            const order = new Order({
-                customerId: req.user.id,
-                // orderDate: new Date(),
-                totalAmount: totalAmount,
-                status: 'New',
-                order_items: req.body.order_items,
-                paymentId: payment._id, // Reference to the payment,
-                shippingAddress: req.body.shippingAddress,
-                shippingCost: req.body.shippingCost,
-
-            });
-            await order.save();
-            // customer.loyaltyPoints -= 100; // Deduct 100 loyalty points
-            // await customer.save();
-            res.status(201).send(order);
-        }
+      await payment.save();
+      await order.save();
+  
+      const redirectUrl = `https://sandbox.payhere.lk/pay/checkout?${payhereParams.toString()}`;
+      console.log("Redirect URL:", redirectUrl);
+      res.json({ redirectUrl });
+      
     } catch (error) {
-        res.status(500).send({ error: error.message });
+      console.error("Order creation error:", error);
+      res.status(500).send({ error: "Internal server error" });
     }
-}
-);
+  });
+  
+  // Generate PayHere MD5 hash (required for security)
+  function generatePayHereHash(orderId, amount, currency) {
+    const secret = "MerchantSecret";
+    const concatenated = secret + orderId + amount + currency;
+    return crypto.createHash('md5').update(concatenated).digest('hex').toUpperCase();
+  }
 
 // cancel order by ID
 router.put('/cancel/:id', authenticateToken, authorizeRole("Admin"), async (req, res) => {

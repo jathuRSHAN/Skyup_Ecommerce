@@ -10,6 +10,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const subCategoryRoutes = require("./routes/subCategoryRoutes");
 const itemRoutes = require("./routes/itemRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 dotenv.config(); // Load environment variables
 
@@ -44,6 +45,7 @@ app.use("/categories", categoryRoutes);
 app.use("/sub-categories", subCategoryRoutes);
 app.use("/items", itemRoutes);
 app.use("/orders", orderRoutes);
+app.use("/payments", paymentRoutes);
 
 // Error-handling middleware
 app.use((err, req, res, next) => {
