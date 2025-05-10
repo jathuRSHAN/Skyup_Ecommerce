@@ -74,24 +74,29 @@ router.post('/', authenticateToken, async (req, res) => {
         customerId: customer._id,
         amount: totalAmount,
         currency: 'LKR',
-        paymentMethod: 'Credit Card',
+        paymentMethod: 'Other',
+        transactionId: null,
         status: 'Pending'
       });
       
+     //create this const discount = 
   
       // Create order
       const order = new Order({
         customerId: req.user.id,
         items,
         totalAmount,
+        discount,
+        lastAmount: totalAmount - discount,
         status: 'New',
+        paymentStatus: 'Pending',
         paymentId: payment._id,
         shippingAddress: req.body.shippingAddress
       });
       
   
       // Generate PayHere URL
-      const payhereParams = new URLSearchParams({
+     /* const payhereParams = new URLSearchParams({
         merchant_id: "1211144", // Sandbox ID
         return_url: `https://3190-175-157-186-5.ngrok-free.app/payments/success`,
         cancel_url: `https://3190-175-157-186-5.ngrok-free.app/payments/cancel`,
@@ -110,9 +115,10 @@ router.post('/', authenticateToken, async (req, res) => {
         delivery_address: req.body.shippingAddress,
         custom_1: `Customer: ${customer._id}`,
         hash: generatePayHereHash(payment._id.toString(), totalAmount.toFixed(2), "LKR")
-      });
+      });*/
 
       //decrese stock
+      
       await Promise.all(
         items.map(async item => {
           const product = await Item.findById(item.itemId);
@@ -126,14 +132,20 @@ router.post('/', authenticateToken, async (req, res) => {
 
       await payment.save();
       await order.save();
+      res.status(201).send({
+        message: 'Order created successfully',
+        order,
+        payment,
+        // redirectUrl: `https://sandbox.payhere.lk/pay/checkout?${payhereParams.toString()}`
+      });
   
-      const redirectUrl = `https://sandbox.payhere.lk/pay/checkout?${payhereParams.toString()}`;
-      console.log("Redirect URL:", redirectUrl);
-      res.json({ redirectUrl });
+     // const redirectUrl = `https://sandbox.payhere.lk/pay/checkout?${payhereParams.toString()}`;
+      //console.log("Redirect URL:", redirectUrl);
+      //res.json({ redirectUrl });
       
     } catch (error) {
       console.error("Order creation error:", error);
-      res.status(500).send({ error: "Internal server error" });
+      res.status(500).send({ error: "Order creation error" });
     }
   });
   
@@ -170,6 +182,47 @@ router.put('/cancel/:id', authenticateToken, authorizeRole("Admin"), async (req,
 
         res.status(200).send({ 
             message: 'Order cancelled successfully',
+            order 
+        });
+        
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+}
+);
+
+// Update order status by ID
+router.put('/:id/status', authenticateToken, authorizeRole("Admin"), async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id).exec();
+        if (!order) {
+            return res.status(404).send({ error: 'Order not found' });
+        }
+        const { status } = req.body;
+        if (status === 'Done') {
+            order.status = 'Done';
+            order.paymentStatus = 'Completed'; // Update payment status to Completed
+            const payment = await Payment.findById(order.paymentId);
+            if (payment) {
+                payment.status = 'Completed'; // Update payment status to Completed
+                await payment.save();
+            }
+        } else if (status === 'Processing') {
+            order.status = 'Processing';
+        } else if (status === 'Cancelled') {
+            order.status = 'Cancelled';
+            const payment = await Payment.findById(order.paymentId);
+            if (payment) {
+                payment.status = 'Cancelled'; // Update payment status to Cancelled
+                await payment.save();
+            }
+        } else {
+            return res.status(400).send({ error: 'Invalid status' });
+        }
+        await order.save(); // Save the updated order
+
+        res.status(200).send({ 
+            message: 'Order status updated successfully',
             order 
         });
         

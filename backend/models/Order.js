@@ -11,26 +11,29 @@ const orderSchema = new Schema({
   },
   // orderDate: { type: Date,required: true},
   totalAmount: { type: Number, required: true},
+  discount: { type: Number, default: 0 },
+  lastAmount: { type: Number, required: true, default: 0 }, // Final amount after discount
   status: { type: String,
     enum: ["New", "Processing",  "Done", "Cancelled"],
     required: true,
   },
+  paymentStatus: { type: String, enum: ["Pending", "Completed", "Failed"], required: true },
   //shippingCost: { type: Number, required: true, default: 0 },
   order_items: [
     {
-      itemId: {type: String, required: true},
+      itemId: {type: mongoose.Schema.Types.ObjectId , required: true},
       quantity: {type: Number, required: true},
       // priceAtOrder: {type: Number,required: true},
     },
   ],
   paymentId: {type: mongoose.Schema.Types.ObjectId, ref: 'Payment', required: true},
-  /*shippingAddress: {
+  shippingAddress: {
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },
       postalCode: { type: String, required: true },
     
-  },*/
+  },
 },
 {
   timestamps: true,

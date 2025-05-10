@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const PaymentSchema = new Schema({
     customerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
     amount: { type: Number, required: true },
-    paymentMethod: { type: String, enum: ['Credit Card', 'Debit Card', 'Net Banking'], required: true },
+    currency: { type: String, enum: ['LKR', 'USD'], default: 'LKR' },
+    paymentMethod: { type: String, enum: ['Credit Card', 'Debit Card', 'Net Banking','Other'], required: true }, // 'Other' for manual payments
     transactionId: { type: String },
     status: { type: String, enum: ['Pending', 'Completed', 'Failed','Canceled','Processing'], default: 'Pending' },
 }, {
