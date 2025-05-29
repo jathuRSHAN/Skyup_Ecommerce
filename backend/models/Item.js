@@ -9,6 +9,7 @@ const itemSchema = new Schema({
     stock: { type: Number, required: true },
     brandId: { type: Schema.Types.ObjectId, ref:'Brand' },
     image: { type: String, required: true },
+    imagePublicId: { type: String, required: true },
 },
 {
     timestamps: true

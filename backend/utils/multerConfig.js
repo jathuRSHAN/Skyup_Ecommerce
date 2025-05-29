@@ -1,15 +1,16 @@
 const multer = require('multer');
-//const path = require('path');
 
-// Setup local storage config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Store in a local folder
+const storage = multer.memoryStorage(); // Store in memory, not disk
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed'), false);
+    }
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5MB
 });
 
-const upload = multer({ storage: storage });
 module.exports = upload;
